@@ -3,6 +3,8 @@ from flask_login import (
     LoginManager, UserMixin,
     login_user, login_required, logout_user
 )
+from flask import jsonify
+
 from bdd_config import BddObject
 
 
@@ -115,5 +117,70 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
+
+
+# ---------- ROUTE GET : récupérer tous les produits ----------
+@app.route("/produits", methods=["GET"])
+def get_produits():
+    """Retourne tous les produits sous forme JSON"""
+    try:
+        conn = BddObject.get_db_connection()  # ✅ correction ici
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM produit")
+        produits = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        return jsonify(produits), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+    # ---------- ROUTE PUT : mettre à jour un produit ----------
+@app.route("/produits/<int:id_p>", methods=["PUT"])
+def update_produit(id_p):
+    """Met à jour les informations d’un produit existant"""
+    try:
+        data = request.get_json()
+
+        # Champs autorisés à modifier
+        champs = ["type_p", "designation_p", "prix_ht", "date_in", "timeS_in", "stock_p"]
+        updates = []
+        values = []
+
+        # Construction dynamique de la requête
+        for champ in champs:
+            if champ in data:
+                updates.append(f"{champ} = %s")
+                values.append(data[champ])
+
+        if not updates:
+            return jsonify({"message": "Aucune donnée à mettre à jour."}), 400
+
+        values.append(id_p)
+        query = f"UPDATE produit SET {', '.join(updates)} WHERE id_p = %s"
+
+        conn = BddObject.get_db_connection()  # ✅ correction ici aussi
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(values))
+        conn.commit()
+
+        affected = cursor.rowcount  # nombre de lignes modifiées
+
+        cursor.close()
+        conn.close()
+
+        if affected == 0:
+            return jsonify({"message": f"Aucun produit trouvé avec id_p={id_p}"}), 404
+
+        return jsonify({"message": "Produit mis à jour avec succès."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)
+
+    
