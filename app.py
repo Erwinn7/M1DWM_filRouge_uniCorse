@@ -4,8 +4,6 @@ from flask_login import (
     login_user, login_required, logout_user
 )
 from bdd_config import BddObject
-
-
 from werkzeug.security import generate_password_hash, check_password_hash  # pour vérifier le hash du mot de passe
 
 app = Flask(__name__)
@@ -16,6 +14,7 @@ login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 
+# Classe User pour manipuler le user connecté
 class User(UserMixin):
     def __init__(self, user_id, user_login, user_password, user_compte_id, user_mail):
         self.id = user_id
@@ -35,6 +34,7 @@ def load_user(user_id):
     if row:
         return User(row["user_id"], row["user_login"], row["user_password"], row["user_compte_id"], row["user_mail"])
     return None
+
 
 #route principale
 @app.route("/")

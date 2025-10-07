@@ -67,7 +67,7 @@
       <label for="user_login">Nom d'utilisateur</label>
       <input id="user_login" name="user_login" type="text" required minlength="3" maxlength="50" placeholder="ex: erwinn">
 
-      <label for="user_mail">Email <small>(optionnel)</small></label>
+      <label for="user_mail">Email <small></small></label>
       <input id="user_mail" name="user_mail" type="email" placeholder="adresse@example.com">
 
       <label for="user_password">Mot de passe</label>
@@ -129,8 +129,6 @@
         return;
       }
 
-
-      // optionally disable the button to prevent double submit
       submitBtn.disabled = true;
     });
   </script>
