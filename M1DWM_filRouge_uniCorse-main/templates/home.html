@@ -2,8 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Connexion utilisateur</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil</title>
     <style>
         body {
             background: #f5f6fa;
@@ -28,6 +27,8 @@
         form {
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
             gap: 1rem;
         }
         label {
@@ -59,23 +60,17 @@
         button:hover {
             background: #74b9ff;
         }
-        .msg { margin-top:10px; font-size:14px; color:#d9534f; }
-
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Connexion</h2>
-        {% if message %}
-        <div class="msg">{{ message }}</div>
-        {% endif %}
-        <form method="post" autocomplete="off">
-            <label for="user_login">Login</label>
-            <input type="text" id="user_login" name="user_login" placeholder="Votre Login" required>
-            <label for="user_password">Mot de passe</label>
-            <input type="password" id="user_password" name="user_password" placeholder="Mot de passe" required>
-            <button type="submit">Se connecter</button>
-            <p>Vous n'avez pas de compte ? <a href="/register">S'inscrire</a></p>
+    <div class="register-container">
+        <form class="register-form">
+            <h1 class="register-title">Bienvenue sur Fil Rouge</h1>
+            <div class="profile-section">
+                <img src="https://www.gravatar.com/avatar?d=mp&s=120" alt="Image de profil" class="profile-img">
+            </div>
+            <p class="register-subtitle">{{ current_user.username }} est connecté(e)</p>
+            <a href="/logout" class="register-btn">Se déconnecter</a>
         </form>
     </div>
 </body>
