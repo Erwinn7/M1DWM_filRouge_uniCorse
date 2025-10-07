@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil</title>
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            background: #fff;
+            padding: 2rem 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
+            min-width: 320px;
+        }
+        h2 {
+            text-align: center;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+        label {
+            color: #636e72;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        input {
+            padding: 0.7rem;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: #0984e3;
+            outline: none;
+        }
+        button {
+            background: #0984e3;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 0.8rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #74b9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <form class="register-form">
+            <h1 class="register-title">Bienvenue sur Fil Rouge</h1>
+            <div class="profile-section">
+                <img src="https://www.gravatar.com/avatar?d=mp&s=120" alt="Image de profil" class="profile-img">
+            </div>
+            <p class="register-subtitle">{{ current_user.username }} est connecté(e)</p>
+            <a href="/logout" class="register-btn">Se déconnecter</a>
+        </form>
+    </div>
+</body>
+</html>
