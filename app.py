@@ -135,6 +135,28 @@ def get_produits():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+    # ---------- ROUTE GET : récupérer un seul produit par son id ----------
+@app.route("/produits/<int:id_p>", methods=["GET"])
+def get_produit(id_p):
+    """Retourne un produit spécifique"""
+    try:
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM produit WHERE id_p = %s", (id_p,))
+        produit = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if not produit:
+            return jsonify({"message": f"Aucun produit trouvé avec id_p={id_p}"}), 404
+
+        return jsonify(produit), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    
 
     # ---------- ROUTE : mettre à jour un produit ----------
 
@@ -198,6 +220,78 @@ def update_produit(id_p):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# ---------- ROUTE GET : récupérer tous les utilisateurs ----------
+@app.route("/users", methods=["GET"])
+def get_users():
+    """Retourne tous les utilisateurs"""
+    try:
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT user_id, user_login, user_mail, user_compte_id, user_date_new, user_date_login FROM user")
+        users = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(users), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------- ROUTE GET : récupérer un seul utilisateur par son id ----------
+@app.route("/users/<int:user_id>", methods=["GET"])
+def get_user_by_id(user_id):
+    """Retourne un utilisateur précis selon son ID"""
+    try:
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT user_id, user_login, user_mail, user_compte_id, user_date_new, user_date_login 
+            FROM user WHERE user_id = %s
+        """, (user_id,))
+        user = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if not user:
+            return jsonify({"message": f"Aucun utilisateur trouvé avec user_id={user_id}"}), 404
+
+        return jsonify(user), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------- ROUTE GET : rechercher un utilisateur par login ----------
+@app.route("/users/search", methods=["GET"])
+def search_user_by_login():
+    """Recherche un utilisateur par son login (partiel ou complet)"""
+    try:
+        login = request.args.get("login", "").strip()
+
+        if not login:
+            return jsonify({"message": "Veuillez fournir un paramètre ?login=..."}), 400
+
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT user_id, user_login, user_mail, user_compte_id, user_date_new, user_date_login
+            FROM user WHERE user_login LIKE %s
+        """, (f"%{login}%",))
+        users = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        if not users:
+            return jsonify({"message": f"Aucun utilisateur trouvé pour '{login}'"}), 404
+
+        return jsonify(users), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 
