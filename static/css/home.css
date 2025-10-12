@@ -1,0 +1,41 @@
+ nav {
+            background: #f5f6fa;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            width: 100%;
+
+        }
+        .login-container {
+            background: #fff;
+            padding: 2rem 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
+        }
+        h2 {
+            text-align: center;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+        label {
+            color: #636e72;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        input {
+            padding: 0.7rem;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: #0984e3;
+            outline: none;
+        }

@@ -4,55 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Inscription</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f9fc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .card {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-      padding: 24px;
-      width: 360px;
-    }
-    h2 { margin-top: 0; margin-bottom: 12px; font-size: 20px; }
-    label { display:block; margin-top:10px; font-size:14px; }
-    input[type="text"],
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin-top:6px;
-      border: 1px solid #d6dced;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-    .row {
-      display:flex;
-      gap:8px;
-    }
-    .btn {
-      margin-top:16px;
-      width:100%;
-      padding:10px;
-      border: none;
-      background: #2b6ef6;
-      color: white;
-      font-weight:600;
-      border-radius:6px;
-      cursor:pointer;
-    }
-    .btn:disabled { opacity:0.6; cursor:not-allowed; }
-    .msg { margin-top:10px; font-size:14px; color:#d9534f; }
-    .success { color: #2e7d32; }
-    small { color:#666; }
-  </style>
+  <link rel="stylesheet" href="./static/css/register.css" />
 </head>
 <body>
   <div class="card">
@@ -67,11 +19,7 @@
       <label for="user_login">Nom d'utilisateur</label>
       <input id="user_login" name="user_login" type="text" required minlength="3" maxlength="50" placeholder="ex: erwinn">
 
-<<<<<<< HEAD
       <label for="user_mail">Email <small></small></label>
-=======
-      <label for="user_mail">Email <small>(optionnel)</small></label>
->>>>>>> 601fd8cb5a9a78de9c344d867c28fdac1b9c48e5
       <input id="user_mail" name="user_mail" type="email" placeholder="adresse@example.com">
 
       <label for="user_password">Mot de passe</label>
@@ -133,11 +81,6 @@
         return;
       }
 
-<<<<<<< HEAD
-=======
-
-      // optionally disable the button to prevent double submit
->>>>>>> 601fd8cb5a9a78de9c344d867c28fdac1b9c48e5
       submitBtn.disabled = true;
     });
   </script>

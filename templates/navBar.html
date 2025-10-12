@@ -1,0 +1,23 @@
+<nav class="flex items-center justify-between py-4 bg-white pl-12 pr-12  shadow-xl">
+    <a href="/">
+        <span class="text-3xl font-bold text-red-800 ">
+            Fil Rouge
+        </span>
+    </a>
+        
+        <a href="{{ url_for('get_produits') }}">
+            <span class="text-dark-700 font-bold hover:underline  ">Mes Produits</span>
+        </a>
+        <div class="flex items-center space-x-4">
+            <img src="https://www.gravatar.com/avatar?d=mp&s=40" alt="Image de profil" class="w-10 h-10 rounded-full">
+            <span class="text-gray-700">{{ current_user.username }}</span>
+            <a href="{{ url_for('logout') }}" title="Déconnexion">
+                <button class="bg-red-500 text-white px-4 py-2 rounded shadow-lg shadow-red-500/50 hover:bg-red-600 transition flex items-center justify-center">
+                <!-- Icône Heroicon logout -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V5m6 14H5a2 2 0 01-2-2V7a2 2 0 012-2h8" />
+                    </svg>                
+                </button>
+            </a>
+        </div>
+</nav>

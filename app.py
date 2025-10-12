@@ -6,11 +6,6 @@ from flask_login import (
 from flask import jsonify
 
 from bdd_config import BddObject
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 601fd8cb5a9a78de9c344d867c28fdac1b9c48e5
 from werkzeug.security import generate_password_hash, check_password_hash  # pour vérifier le hash du mot de passe
 
 app = Flask(__name__)
@@ -21,10 +16,7 @@ login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 
-<<<<<<< HEAD
 # Classe User pour manipuler le user connecté
-=======
->>>>>>> 601fd8cb5a9a78de9c344d867c28fdac1b9c48e5
 class User(UserMixin):
     def __init__(self, user_id, user_login, user_password, user_compte_id, user_mail):
         self.id = user_id
@@ -45,10 +37,6 @@ def load_user(user_id):
         return User(row["user_id"], row["user_login"], row["user_password"], row["user_compte_id"], row["user_mail"])
     return None
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 601fd8cb5a9a78de9c344d867c28fdac1b9c48e5
 #route principale
 @app.route("/")
 @login_required # nécessite une connexion
@@ -128,28 +116,48 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
+####GESTION DES PRODUITS####    
 
-
-# ---------- ROUTE GET : récupérer tous les produits ----------
+# ---------- ROUTE GET : récupérer la liste de tous les produits ----------
 @app.route("/produits", methods=["GET"])
+@login_required
 def get_produits():
     """Retourne tous les produits sous forme JSON"""
     try:
-        conn = BddObject.get_db_connection()  # ✅ correction ici
+        conn = BddObject.get_db_connection()  
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM produit")
         produits = cursor.fetchall()
-
         cursor.close()
         conn.close()
-        return jsonify(produits), 200
+        return render_template("list_produits.html", produits=produits), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 
-    # ---------- ROUTE PUT : mettre à jour un produit ----------
-@app.route("/produits/<int:id_p>", methods=["PUT"])
+    # ---------- ROUTE : mettre à jour un produit ----------
+
+#afficher le formulaire de modification
+@app.route("/produit/edit/<int:id_p>", methods=["GET"])
+def edit_produit(id_p):
+    """Affiche le formulaire de modification pour un produit donné"""
+    conn = BddObject.get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM produit WHERE id_p = %s", (id_p,))
+    produit = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not produit:
+        return "Produit introuvable", 404
+
+    return render_template("edit_produit.html", produit=produit)
+
+
+@app.route("/produits/update/<int:id_p>", methods=["PUT"])
 def update_produit(id_p):
     """Met à jour les informations d’un produit existant"""
     try:
@@ -172,7 +180,7 @@ def update_produit(id_p):
         values.append(id_p)
         query = f"UPDATE produit SET {', '.join(updates)} WHERE id_p = %s"
 
-        conn = BddObject.get_db_connection()  # ✅ correction ici aussi
+        conn = BddObject.get_db_connection() 
         cursor = conn.cursor()
         cursor.execute(query, tuple(values))
         conn.commit()
@@ -189,6 +197,32 @@ def update_produit(id_p):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
+
+#supprimer un produit
+@app.route("/produits/delete/<int:id_p>", methods=["DELETE"])
+def delete_produit(id_p):
+    """Supprime un produit existant"""
+    try:
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM produit WHERE id_p = %s", (id_p,))
+        conn.commit()
+
+        affected = cursor.rowcount  # nombre de lignes supprimées
+
+        cursor.close()
+        conn.close()
+
+        if affected == 0:
+            return jsonify({"message": f"Aucun produit trouvé avec id_p={id_p}"}), 404
+
+        return jsonify({"message": "Produit supprimé avec succès."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500          
 
 
 if __name__ == "__main__":

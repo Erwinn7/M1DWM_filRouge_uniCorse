@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Produits</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+</head>
+<body>
+      {% include 'navBar.html' %}
+    <h1 class="text-3xl font-bold text-center my-8">Liste des produits</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
+        {% for prod in produits %}
+        <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center transition-transform duration-300 hover:-translate-y-2 relative group hover:shadow-2xl">
+            <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=120" alt="Image produit" class="w-32 h-32 object-cover rounded mb-4">
+            <div class="w-full mb-8">
+            <h2 class="text-xl font-semibold mb-2" >{{ prod.designation_p }}</h2>
+            <p class="text-gray-600 mb-1" hidden><span class="font-bold">ID:</span> {{ prod.id_p }}</p>
+            <p class="text-gray-600 mb-1"><span class="font-bold">Catégorie:</span> {{ prod.type_p }}</p>
+            <p class="text-gray-600 mb-1"><span class="font-bold">Prix HT:</span> {{ prod.prix_ht }}</p>
+            <p class="text-gray-600 mb-1"><span class="font-bold">Stock disponible:</span> {{ prod.stock_p }}</p>
+            <p class="text-gray-500 mb-1"><span class="font-bold">Date d'ajout:</span> {{ prod.date_in }}</p>
+            </div>
+            <!-- Boutons Modifier-->
+            <div class="flex justify-center gap-2 w-full mt-auto">
+            <a href="{{ url_for('edit_produit', id_p=prod.id_p) }}">
+                <button class="bg-gray-500 text-white text-sm  px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 ">Modifier</button>
+            </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
