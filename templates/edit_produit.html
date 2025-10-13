@@ -8,38 +8,46 @@
 </head>
 <body>
       {% include 'navBar.html' %}
-    <h1 class="text-3xl font-bold text-center my-8">{{ produit.designation_p }} </h1>
-        
-    <div class="max-w-lg mx-auto mt-10 p-6 bg-white shadow rounded">
-    <h1 class="text-2xl font-semibold mb-6 text-center">Modifier les informations du produit</h1>
+    <h1 class="bg-gray-100 font-sans text-2xl font-bold text-center mt-4">{{ produit.designation_p }} </h1>
 
-    <form action="{{ url_for('update_produit', id_p=produit.id_p) }}" method="POST" class="space-y-4">
-        <div>
-        <label class="block text-gray-700">Type</label>
-        <input type="text" name="type_p" value="{{ produit.type_p }}" class="w-full border p-2 rounded" required>
-        </div>
+    <div class="flex justify-center items-center h-screen bg-gray-100 font-sans">
 
-        <div>
-        <label class="block text-gray-700">Désignation</label>
-        <input type="text" name="designation_p" value="{{ produit.designation_p }}" class="w-full border p-2 rounded" required>
-        </div>
+        <div class="bg-white p-10 rounded-xl shadow-lg min-w-[510px]">
 
-        <div>
-        <label class="block text-gray-700">Prix HT</label>
-        <input type="number" step="0.01" name="prix_ht" value="{{ produit.prix_ht }}" class="w-full border p-2 rounded" required>
-        </div>
+            <h2 class="text-center text-gray-800 mb-6 font-semibold">Modifier le produit</h2>
+            <form action="{{ url_for('update_produit', id_p=produit.id_p) }}" method="POST" class="flex flex-col gap-4">
+                
+                <div class="flex flex-col">
+                    <label for="type_p" class="text-gray-600 text-base mb-1">Type</label>
+                    <input type="text" name="type_p" value="{{ produit.type_p }}" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
 
-        <div>
-        <label class="block text-gray-700">Stock</label>
-        <input type="number" name="stock_p" value="{{ produit.stock_p }}" class="w-full border p-2 rounded" required>
-        </div>
+                <div class="flex flex-col">
+                    <label for="designation_p" class="text-gray-600 text-base mb-1">Désignation</label>
+                    <input type="text" name="designation_p" value="{{ produit.designation_p }}" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
 
-        <div class="text-center">
-        <button type="submit" class="bg-gray-500 text-white text-sm  px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 ">
-            Enregistrer les modifications
-        </button>
+                <div class="flex flex-col">
+                    <label for="prix_ht" class="text-gray-600 text-base mb-1">Prix HT</label>
+                    <input type="number" step="0.01" name="prix_ht" value="{{ produit.prix_ht }}" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="stock_p" class="text-gray-600 text-base mb-1">Stock</label>
+                    <input type="number" name="stock_p" value="{{ produit.stock_p }}" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="bg-gray-500 text-white text-sm mb-4 px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 ">
+                        Enregistrer les modifications
+                    </button>
+                </div>
+
+                <p class="msg text-red-600 text-sm mt-2"></p>
+            </form>
         </div>
-    </form>
+    </div>
+
     </div>
 </body>
 </html>

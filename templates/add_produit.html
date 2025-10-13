@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un produit</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100">
+    {% include 'navBar.html' %}
+
+    <div class="flex justify-center items-center h-screen bg-gray-100 font-sans">
+        <div class="bg-white p-10 rounded-xl shadow-lg min-w-[510px]">
+            <h2 class="text-center text-gray-800 mb-6 text-xl font-semibold">Ajouter un produit</h2>
+            <form action="{{ url_for('add_produit') }}" method="POST" class="flex flex-col gap-4">
+                
+                <div class="flex flex-col">
+                    <label for="type_p" class="text-gray-600 text-base mb-1">Type</label>
+                    <input type="text" name="type_p" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="designation_p" class="text-gray-600 text-base mb-1">Désignation</label>
+                    <input type="text" name="designation_p" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="prix_ht" class="text-gray-600 text-base mb-1">Prix HT</label>
+                    <input type="number" step="0.01" name="prix_ht" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="stock_p" class="text-gray-600 text-base mb-1">Stock</label>
+                    <input type="number" name="stock_p" class="border border-gray-300 rounded-md p-3 text-base focus:border-blue-500 focus:outline-none" required>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="bg-gray-500 text-white text-sm mb-4 px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 transition-colors">
+                        Enregistrer
+                    </button>
+                </div>
+
+                <p class="msg text-red-600 text-sm mt-2"></p>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
