@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import (
     LoginManager, UserMixin,
-    login_user, login_required, logout_user
+    login_user, login_required, logout_user, current_user
 )
 from flask import jsonify
 
 from bdd_config import BddObject
 from werkzeug.security import generate_password_hash, check_password_hash  # pour vérifier le hash du mot de passe
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "secret_key"  # nécessaire pour les sessions
@@ -264,7 +265,58 @@ def delete_produit(id_p):
         return jsonify({"success": False, "error": str(e)}), 500     
 
 
+
+
+
+
 ####GESTION DES UTILISATEURS####
+
+#ajouter un utilisateur
+@app.route("/users/add", methods=["GET", "POST"])
+@login_required
+def add_user():
+    """Ajoute un nouvel utilisateur"""
+    try:
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        if request.method == "POST":
+            user_login = request.form["user_login"]
+            user_mail = request.form["user_mail"]
+            user_password = request.form["user_password"]
+
+            # Vérifier si login ou mail existe déjà
+            cursor.execute("SELECT * FROM user WHERE user_login = %s OR user_mail = %s", (user_login, user_mail))
+            existing_user = cursor.fetchone()
+            if existing_user:
+                flash("❌ Ce login ou cet email est déjà utilisé", "danger")
+                return redirect(url_for("add_user"))
+
+            # Hash du mot de passe
+            hashed_password = generate_password_hash(user_password)
+
+            # Insertion du nouvel utilisateur
+            cursor.execute("""
+                INSERT INTO user (user_login, user_mail, user_password, user_date_new)
+                VALUES (%s, %s, %s, %s)
+            """, (user_login, user_mail, hashed_password, datetime.now()))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            flash("✅ Nouvel utilisateur ajouté avec succès", "success")
+            return redirect(url_for("get_users"))
+
+        cursor.close()
+        conn.close()
+        return render_template("add_user.html")
+
+    except Exception as e:
+        print(f"Erreur lors de l'ajout de l'utilisateur : {e}")
+        flash("❌ Erreur lors de l’ajout de l’utilisateur", "danger")
+        return redirect(url_for("get_users"))
+
     
 
 # ---------- ROUTE GET : récupérer tous les utilisateurs ----------
@@ -274,16 +326,17 @@ def get_users():
     try:
         conn = BddObject.get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT user_id, user_login, user_mail, user_compte_id, user_date_new, user_date_login FROM user")
+        cursor.execute("SELECT user_id, user_login, user_mail,  user_date_new, user_date_login FROM user ")
         users = cursor.fetchall()
 
         cursor.close()
         conn.close()
+        print(current_user.username)
 
-        return jsonify(users), 200
-
+        return render_template("users.html", users=users)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Erreur récupération utilisateurs : {e}")
+        return render_template("users.html", users=[])
 
 
 # ---------- ROUTE GET : récupérer un seul utilisateur par son id ----------
@@ -339,6 +392,76 @@ def search_user_by_login():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+#supprimer un utilisateur
+@app.route("/users/delete/<int:user_id>", methods=["POST"])
+@login_required
+def delete_user(user_id):
+    """Supprime un utilisateur existant"""
+    try:
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM user WHERE user_id = %s", (user_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        flash("🗑️ Utilisateur supprimé avec succès", "success")
+    except Exception as e:
+        print(f"Erreur lors de la suppression de l'utilisateur : {e}")
+        flash("❌ Erreur lors de la suppression", "danger")
+
+    return redirect(url_for("get_users"))
+
+# modifier un utilisateur
+@app.route("/users/edit/<int:user_id>", methods=["GET", "POST"])
+@login_required
+def edit_user(user_id):
+    """Affiche et met à jour les informations d’un utilisateur"""
+    try:
+        conn = BddObject.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        if request.method == "POST":
+            user_login = request.form["user_login"]
+            user_mail = request.form["user_mail"]
+
+            # Mise à jour du user
+            cursor.execute("""
+                UPDATE user 
+                SET user_login = %s, user_mail = %s
+                WHERE user_id = %s
+            """, (user_login, user_mail, user_id))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            flash("✅ Utilisateur modifié avec succès", "success")
+            return redirect(url_for("get_users"))
+
+        # Récupération des infos utilisateur
+        cursor.execute("""
+            SELECT user_id, user_login, user_mail, user_date_new, user_date_login 
+            FROM user 
+            WHERE user_id = %s
+        """, (user_id,))
+        user = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if not user:
+            flash("❌ Utilisateur introuvable", "danger")
+            return redirect(url_for("get_users"))
+
+        return render_template("edit_user.html", user=user)
+
+    except Exception as e:
+        print(f"Erreur lors de la modification : {e}")
+        flash("❌ Erreur lors de la mise à jour de l’utilisateur", "danger")
+        return redirect(url_for("get_users"))
 
 
 

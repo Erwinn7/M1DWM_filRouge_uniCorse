@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des utilisateurs</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-gray-100">
+  {% include 'navBar.html' %}
+
+  <div class="max-w-6xl mx-auto mt-10 p-6 bg-white shadow rounded">
+    <h1 class="text-2xl font-semibold text-center mb-6">Liste des utilisateurs</h1>
+
+    <!-- Bouton d'ajout -->
+    <div class="flex justify-end mb-4">
+        {% if current_user.username == 'Admin' %}
+            <a href="{{ url_for('add_user') }}">
+            <button class="bg-gray-500 text-white text-sm mb-4 px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 transition-colors">
+                Ajouter un utilisateur
+            </button>
+            </a>
+        {% else %}
+            <button class="bg-gray-300 text-gray-600 text-sm mb-4 px-3 py-1 rounded border border-gray-300 cursor-not-allowed" disabled title="Accès réservé à l'administrateur">
+            Ajouter un utilisateur
+            </button>
+        {% endif %}
+    </div>
+
+    <!-- Tableau des utilisateurs -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+        <thead class="bg-gray-200 text-gray-700 uppercase text-sm">
+          <tr>
+            <th class="py-3 px-6 text-left">ID</th>
+            <th class="py-3 px-6 text-left">Login</th>
+            <th class="py-3 px-6 text-left">Email</th>
+            <th class="py-3 px-6 text-left">Dernière connexion</th>
+            <th class="py-3 px-6 text-center">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-200">
+          {% for user in users %}
+          <tr class="hover:bg-gray-50 transition">
+            <td class="py-3 px-6">{{ user.user_id }}</td>
+            <td class="py-3 px-6">{{ user.user_login }}</td>
+            <td class="py-3 px-6">{{ user.user_mail }}</td>
+            <td class="py-3 px-6">{{ user.user_date_login or 'Jamais connecté' }}</td>
+            <td class="py-3 px-6 text-center space-x-2">
+              <a href="{{ url_for('edit_user', user_id=user.user_id) }}">
+                <button class=" px-3 py-1 ">
+                  ✏️
+                </button>
+              </a>
+
+              <form action="{{ url_for('delete_user', user_id=user.user_id) }}" method="POST" style="display:inline;">
+                <button type="submit"
+                        onclick="return confirm('Voulez-vous vraiment supprimer cet utilisateur ?')"
+                        class="px-3 py-1 ">
+                  🗑️
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center py-6 text-gray-500">Aucun utilisateur trouvé</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
