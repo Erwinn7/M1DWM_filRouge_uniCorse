@@ -289,7 +289,7 @@ def add_user():
             cursor.execute("SELECT * FROM user WHERE user_login = %s OR user_mail = %s", (user_login, user_mail))
             existing_user = cursor.fetchone()
             if existing_user:
-                flash("❌ Ce login ou cet email est déjà utilisé", "danger")
+                flash("Ce login ou cet email est déjà utilisé", "danger")
                 return redirect(url_for("add_user"))
 
             # Hash du mot de passe
@@ -305,7 +305,7 @@ def add_user():
             cursor.close()
             conn.close()
 
-            flash("✅ Nouvel utilisateur ajouté avec succès", "success")
+            flash("Nouvel utilisateur ajouté avec succès", "success")
             return redirect(url_for("get_users"))
 
         cursor.close()
@@ -314,7 +314,7 @@ def add_user():
 
     except Exception as e:
         print(f"Erreur lors de l'ajout de l'utilisateur : {e}")
-        flash("❌ Erreur lors de l’ajout de l’utilisateur", "danger")
+        flash("Erreur lors de l’ajout de l’utilisateur", "danger")
         return redirect(url_for("get_users"))
 
     
