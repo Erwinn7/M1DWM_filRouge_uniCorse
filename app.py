@@ -453,15 +453,35 @@ def edit_user(user_id):
         conn.close()
 
         if not user:
-            flash("❌ Utilisateur introuvable", "danger")
+            flash("Utilisateur introuvable", "danger")
             return redirect(url_for("get_users"))
 
         return render_template("edit_user.html", user=user)
 
     except Exception as e:
         print(f"Erreur lors de la modification : {e}")
-        flash("❌ Erreur lors de la mise à jour de l’utilisateur", "danger")
+        flash("Erreur lors de la mise à jour de l’utilisateur", "danger")
         return redirect(url_for("get_users"))
+
+@app.route('/produits/recherche', methods=['GET'])
+@login_required
+def rechercher_produits():
+    search_query = request.args.get('search', '')
+
+    # obtenir la connexion via BddObject
+    conn = BddObject.get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if search_query:
+        cursor.execute("SELECT * FROM produit WHERE designation_p LIKE %s", ('%' + search_query + '%',))
+    else:
+        cursor.execute("SELECT * FROM produit")
+
+    produits = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('list_produits.html', produits=produits, query=search_query)
 
 
 

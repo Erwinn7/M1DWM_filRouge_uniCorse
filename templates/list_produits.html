@@ -9,13 +9,22 @@
 <body>
       {% include 'navBar.html' %}
     <h1 class="text-3xl font-bold text-center my-8">Liste des produits</h1>
-    <div class="flex justify-end max-w-6xl mx-auto px-4 mt-6">
-        <a href="{{ url_for('add_produit') }}">
-            <button class="bg-gray-500 text-white text-sm mb-4 px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 ">
-                 Ajouter un produit
-            </button>
-        </a>
-    </div>
+   <div class="flex justify-between items-center max-w-6xl mx-auto px-4 mt-6">
+    <form method="GET" action="{{ url_for('rechercher_produits') }}" class="flex items-center gap-3 w-full max-w-md">
+        <input type="text" name="search" value="{{ request.args.get('search', '') }}" placeholder="Rechercher un produit..."
+            class="border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-gray-400">
+        <button type="submit" 
+            class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-white hover:text-black border border-gray-500 transition">
+            Rechercher
+        </button>
+    </form>
+
+    <a href="{{ url_for('add_produit') }}">
+        <button class="bg-gray-500 text-white text-sm px-4 py-2 rounded hover:bg-white hover:text-black border border-gray-500 transition">
+            + Ajouter un produit
+        </button>
+    </a>
+</div>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
         {% for prod in produits %}
         <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center transition-transform duration-300 hover:-translate-y-2 relative group hover:shadow-2xl">
