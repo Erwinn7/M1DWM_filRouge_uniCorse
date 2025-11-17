@@ -9,6 +9,11 @@
         <a href="{{ url_for('get_produits') }}">
             <span class="text-dark-700 mr-20 font-bold hover:underline  ">Mes Produits</span>
         </a>
+        <a href="{{ url_for('view_cart') }}">
+            <span class="text-dark-700 mr-20 font-bold hover:underline">
+                Panier ({{ cart_count }})
+            </span>
+        </a>
         <a href="{{ url_for('get_users') }}">
             <span class="text-dark-700 mr-50 font-bold hover:underline  ">Utilisateurs</span>
         </a>

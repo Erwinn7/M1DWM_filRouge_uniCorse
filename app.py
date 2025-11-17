@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_login import (
     LoginManager, UserMixin,
     login_user, login_required, logout_user, current_user
@@ -12,10 +12,37 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "secret_key"  # nécessaire pour les sessions
 
+TVA_RATE = 0.2  # 20 % de TVA par défaut
+SHIPPING_FEE = 25.0
+FREE_SHIPPING_THRESHOLD = 1000.0
+
 # ----- Flask-Login: pour la manipulation des connections utilisateurs -----
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
+
+# ----- Helpers globaux -----
+def _ensure_cart():
+    """Garantit l'existence du panier en session et le retourne."""
+    cart = session.get("cart")
+    if cart is None:
+        cart = {}
+        session["cart"] = cart
+    return cart
+
+
+def _to_float(value):
+    if value is None:
+        return 0.0
+    return float(value)
+
+
+@app.context_processor
+def inject_cart_count():
+    cart = session.get("cart", {})
+    total_items = sum(item.get("quantity", 0) for item in cart.values())
+    return {"cart_count": total_items}
+
 
 # Classe User pour manipuler le user connecté
 class User(UserMixin):
@@ -158,13 +185,44 @@ def add_produit():
 def get_produits():
     """Retourne tous les produits sous forme JSON"""
     try:
+        selected_category = request.args.get("category", "").strip()
+        search_term = request.args.get("search", "").strip()
         conn = BddObject.get_db_connection()  
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM produit")
+
+        base_query = "SELECT * FROM produit"
+        where_clauses = []
+        params = []
+
+        if selected_category:
+            where_clauses.append("type_p = %s")
+            params.append(selected_category)
+
+        if search_term:
+            where_clauses.append("(designation_p LIKE %s OR type_p LIKE %s)")
+            like_value = f"%{search_term}%"
+            params.extend([like_value, like_value])
+
+        if where_clauses:
+            base_query += " WHERE " + " AND ".join(where_clauses)
+
+        base_query += " ORDER BY date_in DESC"
+
+        cursor.execute(base_query, tuple(params))
         produits = cursor.fetchall()
+
+        cursor.execute("SELECT DISTINCT type_p FROM produit ORDER BY type_p ASC")
+        categories = [row["type_p"] for row in cursor.fetchall()]
+
         cursor.close()
         conn.close()
-        return render_template("list_produits.html", produits=produits), 200
+        return render_template(
+            "list_produits.html",
+            produits=produits,
+            categories=categories,
+            selected_category=selected_category,
+            search_term=search_term
+        ), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -362,6 +420,116 @@ def get_user_by_id(user_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+#### GESTION DU PANIER ####
+
+@app.route("/cart")
+@login_required
+def view_cart():
+    cart = session.get("cart", {})
+    cart_items = []
+    total = 0.0
+
+    for product_id, data in cart.items():
+        line_total = data["prix_ht"] * data["quantity"]
+        total += line_total
+        cart_items.append({
+            "id_p": int(product_id),
+            "designation": data["designation"],
+            "prix_ht": data["prix_ht"],
+            "quantity": data["quantity"],
+            "line_total": line_total,
+        })
+
+    total_tva = total * TVA_RATE
+    total_ttc = total + total_tva
+    shipping_cost = 0.0 if total >= FREE_SHIPPING_THRESHOLD else SHIPPING_FEE
+    grand_total = total_ttc + shipping_cost
+
+    return render_template(
+        "cart.html",
+        cart_items=cart_items,
+        total_ht=total,
+        total_tva=total_tva,
+        total_ttc=total_ttc,
+        tva_rate=int(TVA_RATE * 100),
+        shipping_cost=shipping_cost,
+        free_shipping_threshold=FREE_SHIPPING_THRESHOLD,
+        grand_total=grand_total,
+    )
+
+
+@app.route("/cart/add/<int:id_p>", methods=["POST"])
+@login_required
+def add_to_cart(id_p):
+    try:
+        quantity = int(request.form.get("quantity", 1))
+        if quantity < 1:
+            quantity = 1
+    except (TypeError, ValueError):
+        quantity = 1
+
+    conn = BddObject.get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id_p, designation_p, prix_ht, stock_p FROM produit WHERE id_p = %s", (id_p,))
+    produit = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not produit:
+        flash("Produit introuvable.", "danger")
+        return redirect(url_for("get_produits"))
+
+    stock_dispo = produit.get("stock_p")
+    try:
+        stock_dispo = int(stock_dispo) if stock_dispo is not None else None
+    except (TypeError, ValueError):
+        stock_dispo = None
+
+    cart = _ensure_cart()
+    cart_item = cart.get(str(id_p), {
+        "designation": produit["designation_p"],
+        "prix_ht": _to_float(produit["prix_ht"]),
+        "quantity": 0,
+    })
+
+    nouvelle_quantite = cart_item["quantity"] + quantity
+
+    if stock_dispo is not None and nouvelle_quantite > stock_dispo:
+        nouvelle_quantite = stock_dispo
+
+    if nouvelle_quantite == cart_item["quantity"]:
+        flash("Stock insuffisant pour ajouter davantage de ce produit.", "warning")
+        return redirect(url_for("get_produits"))
+
+    cart_item["quantity"] = nouvelle_quantite
+    cart[str(id_p)] = cart_item
+    session["cart"] = cart
+    session.modified = True
+
+    flash("Produit ajouté au panier.", "success")
+    return redirect(url_for("view_cart"))
+
+
+@app.route("/cart/remove/<int:id_p>", methods=["POST"])
+@login_required
+def remove_from_cart(id_p):
+    cart = session.get("cart", {})
+    if str(id_p) in cart:
+        cart.pop(str(id_p))
+        session["cart"] = cart
+        session.modified = True
+        flash("Produit retiré du panier.", "info")
+    return redirect(url_for("view_cart"))
+
+
+@app.route("/cart/clear", methods=["POST"])
+@login_required
+def clear_cart():
+    session.pop("cart", None)
+    flash("Panier vidé.", "info")
+    return redirect(url_for("view_cart"))
 
 
 # ---------- ROUTE GET : rechercher un utilisateur par login ----------

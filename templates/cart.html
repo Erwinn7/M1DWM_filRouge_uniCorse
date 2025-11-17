@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon panier</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50">
+    {% include 'navBar.html' %}
+    <div class="max-w-5xl mx-auto mt-10 bg-white shadow p-8 rounded-lg">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold">Mon panier</h1>
+            {% if cart_items %}
+            <form action="{{ url_for('clear_cart') }}" method="post">
+                <button class="text-sm px-4 py-2 rounded border border-red-500 text-red-600 hover:bg-red-50 transition">
+                    Vider le panier
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if not cart_items %}
+            <p class="text-gray-500 text-center py-10">Votre panier est vide pour le moment.</p>
+            <div class="text-center mt-6">
+                <a href="{{ url_for('get_produits') }}" class="inline-flex items-center px-5 py-2 bg-gray-900 text-white rounded hover:bg-gray-700 transition">
+                    Voir les produits
+                </a>
+            </div>
+        {% else %}
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="text-left bg-gray-100">
+                        <th class="p-3">Produit</th>
+                        <th class="p-3">Prix HT</th>
+                        <th class="p-3">Quantité</th>
+                        <th class="p-3">Sous-total</th>
+                        <th class="p-3 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr class="border-b">
+                        <td class="p-3">
+                            <div class="font-semibold">{{ item.designation }}</div>
+                        </td>
+                        <td class="p-3">{{ '%.2f'|format(item.prix_ht) }} €</td>
+                        <td class="p-3">{{ item.quantity }}</td>
+                        <td class="p-3 font-semibold">{{ '%.2f'|format(item.line_total) }} €</td>
+                        <td class="p-3 text-center">
+                            <form action="{{ url_for('remove_from_cart', id_p=item.id_p) }}" method="post">
+                                <button class="text-sm px-3 py-1 border border-gray-400 rounded hover:bg-gray-50 transition">
+                                    Retirer
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-end mt-6">
+            <div class="text-right space-y-1">
+                <p class="text-lg font-semibold text-gray-700">Total HT : {{ '%.2f'|format(total_ht) }} €</p>
+                <p class="text-lg text-gray-600">TVA ({{ tva_rate }}%) : {{ '%.2f'|format(total_tva) }} €</p>
+                <p class="text-lg text-gray-700">Total TTC : {{ '%.2f'|format(total_ttc) }} €</p>
+                <p class="text-lg {{ 'text-green-600 font-semibold' if shipping_cost == 0 else 'text-gray-700' }}">
+                    {% if shipping_cost == 0 %}
+                        Livraison offerte (commande ≥ {{ '%.2f'|format(free_shipping_threshold) }} € HT)
+                    {% else %}
+                        Frais de port : {{ '%.2f'|format(shipping_cost) }} €
+                    {% endif %}
+                </p>
+                <p class="text-2xl font-bold">Total à payer : {{ '%.2f'|format(grand_total) }} €</p>
+                <button class="mt-4 px-5 py-2 bg-green-600 text-white rounded shadow hover:bg-green-500 transition" disabled>
+                    Paiement à venir
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+
