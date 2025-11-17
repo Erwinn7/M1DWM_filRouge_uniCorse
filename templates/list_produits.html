@@ -9,13 +9,22 @@
 <body>
       {% include 'navBar.html' %}
     <h1 class="text-3xl font-bold text-center my-8">Liste des produits</h1>
+    
+    <!-- Bouton d'ajout visible uniquement pour les admins -->
     <div class="flex justify-end max-w-6xl mx-auto px-4 mt-6">
-        <a href="{{ url_for('add_produit') }}">
-            <button class="bg-gray-500 text-white text-sm mb-4 px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 ">
-                 Ajouter un produit
+        {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('add_produit') }}">
+                <button class="bg-gray-500 text-white text-sm mb-4 px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 ">
+                     Ajouter un produit
+                </button>
+            </a>
+        {% else %}
+            <button class="bg-gray-300 text-gray-600 text-sm mb-4 px-3 py-1 rounded border border-gray-300 cursor-not-allowed" disabled title="Accès réservé aux administrateurs">
+                Ajouter un produit
             </button>
-        </a>
+        {% endif %}
     </div>
+    
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
         {% for prod in produits %}
         <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center transition-transform duration-300 hover:-translate-y-2 relative group hover:shadow-2xl">
@@ -28,7 +37,9 @@
             <p class="text-gray-600 mb-1"><span class="font-bold">Stock disponible:</span> {{ prod.stock_p }}</p>
             <p class="text-gray-500 mb-1"><span class="font-bold">Date d'ajout:</span> {{ prod.date_in }}</p>
             </div>
-            <!-- Boutons Modifier-->
+            
+            <!-- Boutons Modifier/Supprimer visibles uniquement pour les admins -->
+            {% if current_user.role == 'admin' %}
             <div class="flex justify-center gap-2 w-full mt-auto">
                 <a href="{{ url_for('edit_produit', id_p=prod.id_p) }}">
                     <button class="bg-gray-500 text-white text-sm  px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 ">Modifier</button>
@@ -46,6 +57,12 @@
                     }
                 </script>
             </div>
+            {% else %}
+            <div class="flex justify-center gap-2 w-full mt-auto">
+                <button class="bg-gray-300 text-gray-600 text-sm px-3 py-1 rounded border border-gray-300 cursor-not-allowed" disabled title="Accès admin requis">Modifier</button>
+                <button class="bg-gray-300 text-gray-600 text-sm px-3 py-1 rounded border border-gray-300 cursor-not-allowed" disabled title="Accès admin requis">Supprimer</button>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

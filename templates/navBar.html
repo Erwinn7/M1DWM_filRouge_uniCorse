@@ -7,11 +7,16 @@
         
     <div class="flex items-center space-x-4">
         <a href="{{ url_for('get_produits') }}">
-            <span class="text-dark-700 mr-20 font-bold hover:underline  ">Mes Produits</span>
+            <span class="text-dark-700 mr-20 font-bold hover:underline">Mes Produits</span>
         </a>
+        
+        <!-- Lien Utilisateurs visible uniquement pour les admins -->
+        {% if current_user.role == 'admin' %}
         <a href="{{ url_for('get_users') }}">
-            <span class="text-dark-700 mr-50 font-bold hover:underline  ">Utilisateurs</span>
+            <span class="text-dark-700 mr-50 font-bold hover:underline">Utilisateurs</span>
         </a>
+        {% endif %}
+        
         <img src="https://www.gravatar.com/avatar?d=mp&s=40" alt="Image de profil" class="w-10 h-10 rounded-full">
         <span class="text-gray-700">{{ current_user.username }}</span>
         <a href="{{ url_for('logout') }}" title="Déconnexion">

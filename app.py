@@ -1,3 +1,4 @@
+from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import (
     LoginManager, UserMixin,
@@ -6,25 +7,25 @@ from flask_login import (
 from flask import jsonify
 
 from bdd_config import BddObject
-from werkzeug.security import generate_password_hash, check_password_hash  # pour vérifier le hash du mot de passe
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = "secret_key"  # nécessaire pour les sessions
+app.secret_key = "secret_key"
 
-# ----- Flask-Login: pour la manipulation des connections utilisateurs -----
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 
 # Classe User pour manipuler le user connecté
 class User(UserMixin):
-    def __init__(self, user_id, user_login, user_password, user_compte_id, user_mail):
+    def __init__(self, user_id, user_login, user_password, user_compte_id, user_mail, user_role="user"):
         self.id = user_id
         self.username = user_login
         self.password_hash = user_password
         self.compte_id = user_compte_id
         self.mail = user_mail
+        self.role = user_role
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -35,8 +36,21 @@ def load_user(user_id):
     cursor.close()
     conn.close()
     if row:
-        return User(row["user_id"], row["user_login"], row["user_password"], row["user_compte_id"], row["user_mail"])
+        return User(row["user_id"], row["user_login"], row["user_password"], row["user_compte_id"], row["user_mail"], row.get("user_role", "user"))
     return None
+
+# Décorateur pour vérifier si l'utilisateur est admin
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash("Vous devez être connecté", "danger")
+            return redirect(url_for("login"))
+        if current_user.role != "admin":
+            flash("❌ Accès refusé. Seuls les administrateurs peuvent accéder à cette ressource.", "danger")
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return decorated_function
 
 #route principale
 @app.route("/")
@@ -72,7 +86,7 @@ def register():
                 return render_template("register.html", message="Nom d'utilisateur déjà utilisé.")
             
             cursor.execute(
-                "INSERT INTO user (user_login, user_password, user_mail) VALUES (%s, %s,%s)",
+                "INSERT INTO user (user_login, user_password, user_mail, user_date_new) VALUES (%s, %s, %s, NOW())",
                 (user_login, hashed, user_mail)
             )
             conn.commit()
@@ -82,8 +96,10 @@ def register():
         except Exception as e:
             if conn:
                 conn.rollback()
-            # log l'erreur côté serveur si besoin
-            return render_template("register.html", message="Erreur lors de la création de l'utilisateur.")
+            # Affiche l'erreur réelle pour déboguer
+            print(f"Erreur inscription : {str(e)}")
+            error_msg = f"Erreur : {str(e)}"
+            return render_template("register.html", message=error_msg)
         finally:
             if conn:
                 conn.close()
@@ -97,13 +113,13 @@ def login():
 
         conn = BddObject.get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM user WHERE user_login = %s", (userLogin,))
+        cursor.execute("SELECT * FROM user WHERE user_login = %s", (userLogin,)) 
         user_row = cursor.fetchone()
         cursor.close()
         conn.close()
 
         if user_row and check_password_hash(user_row["user_password"], userPassword):
-            user = User(user_row["user_id"], user_row["user_login"], user_row["user_password"], user_row["user_compte_id"], user_row["user_mail"])
+            user = User(user_row["user_id"], user_row["user_login"], user_row["user_password"], user_row["user_compte_id"], user_row["user_mail"], user_row.get("user_role", "user"))
             login_user(user)
             return redirect(url_for("home"))
         else:
@@ -120,9 +136,9 @@ def logout():
 ####GESTION DES PRODUITS####    
 
 @app.route("/produits/add", methods=["GET", "POST"])
-@login_required
+@admin_required
 def add_produit():
-    """Ajoute un nouveau produit"""
+    """Ajoute un nouveau produit (admin uniquement)"""
     if request.method == "POST":
         type_p = request.form["type_p"]
         designation_p = request.form["designation_p"]
@@ -216,9 +232,9 @@ def edit_produit(id_p):
 
 
 @app.route("/produits/update/<int:id_p>", methods=["POST"])
-@login_required
+@admin_required
 def update_produit(id_p):
-    """Met à jour les informations d’un produit existant"""
+    """Met à jour les informations d’un produit existant (admin uniquement)"""
     try:
         type_p = request.form["type_p"]
         designation_p = request.form["designation_p"]
@@ -248,9 +264,9 @@ def update_produit(id_p):
 
 #supprimer un produit
 @app.route("/produits/delete/<int:id_p>", methods=["DELETE"])
-@login_required
+@admin_required
 def delete_produit(id_p):
-    """Supprime un produit existant"""
+    """Supprime un produit existant (admin uniquement)"""
     try:
         conn = BddObject.get_db_connection()
         cursor = conn.cursor()
@@ -266,16 +282,13 @@ def delete_produit(id_p):
 
 
 
-
-
-
 ####GESTION DES UTILISATEURS####
 
 #ajouter un utilisateur
 @app.route("/users/add", methods=["GET", "POST"])
-@login_required
+@admin_required
 def add_user():
-    """Ajoute un nouvel utilisateur"""
+    """Ajoute un nouvel utilisateur (admin uniquement)"""
     try:
         conn = BddObject.get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -321,17 +334,17 @@ def add_user():
 
 # ---------- ROUTE GET : récupérer tous les utilisateurs ----------
 @app.route("/users", methods=["GET"])
+@admin_required
 def get_users():
-    """Retourne tous les utilisateurs"""
+    """Retourne tous les utilisateurs (admin uniquement)"""
     try:
         conn = BddObject.get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT user_id, user_login, user_mail,  user_date_new, user_date_login FROM user ")
+        cursor.execute("SELECT user_id, user_login, user_mail, user_date_new, user_date_login FROM user")
         users = cursor.fetchall()
 
         cursor.close()
         conn.close()
-        print(current_user.username)
 
         return render_template("users.html", users=users)
     except Exception as e:
@@ -396,9 +409,9 @@ def search_user_by_login():
 
 #supprimer un utilisateur
 @app.route("/users/delete/<int:user_id>", methods=["POST"])
-@login_required
+@admin_required
 def delete_user(user_id):
-    """Supprime un utilisateur existant"""
+    """Supprime un utilisateur existant (admin uniquement)"""
     try:
         conn = BddObject.get_db_connection()
         cursor = conn.cursor()
@@ -416,9 +429,9 @@ def delete_user(user_id):
 
 # modifier un utilisateur
 @app.route("/users/edit/<int:user_id>", methods=["GET", "POST"])
-@login_required
+@admin_required
 def edit_user(user_id):
-    """Affiche et met à jour les informations d’un utilisateur"""
+    """Affiche et met à jour les informations d’un utilisateur (admin uniquement)"""
     try:
         conn = BddObject.get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -453,19 +466,39 @@ def edit_user(user_id):
         conn.close()
 
         if not user:
-            flash("❌ Utilisateur introuvable", "danger")
+            flash("Utilisateur introuvable", "danger")
             return redirect(url_for("get_users"))
 
         return render_template("edit_user.html", user=user)
 
     except Exception as e:
         print(f"Erreur lors de la modification : {e}")
-        flash("❌ Erreur lors de la mise à jour de l’utilisateur", "danger")
+        flash("Erreur lors de la mise à jour de l’utilisateur", "danger")
         return redirect(url_for("get_users"))
+
+@app.route('/produits/recherche', methods=['GET'])
+@login_required
+def rechercher_produits():
+    search_query = request.args.get('search', '')
+
+    # obtenir la connexion via BddObject
+    conn = BddObject.get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if search_query:
+        cursor.execute("SELECT * FROM produit WHERE designation_p LIKE %s", ('%' + search_query + '%',))
+    else:
+        cursor.execute("SELECT * FROM produit")
+
+    produits = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('list_produits.html', produits=produits, query=search_query)
 
 
 
 if __name__ == "__main__":
     app.run(debug=True)
 
-    
+

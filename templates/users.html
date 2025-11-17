@@ -14,7 +14,7 @@
 
     <!-- Bouton d'ajout -->
     <div class="flex justify-end mb-4">
-        {% if current_user.username == 'Admin' %}
+        {% if current_user.role == 'admin' %}
             <a href="{{ url_for('add_user') }}">
             <button class="bg-gray-500 text-white text-sm mb-4 px-3 py-1 rounded hover:bg-white hover:text-black border border-gray-500 transition-colors">
                 Ajouter un utilisateur
@@ -36,7 +36,9 @@
             <th class="py-3 px-6 text-left">Login</th>
             <th class="py-3 px-6 text-left">Email</th>
             <th class="py-3 px-6 text-left">Dernière connexion</th>
+            {% if current_user.role == 'admin' %}
             <th class="py-3 px-6 text-center">Actions</th>
+            {% endif %}
           </tr>
         </thead>
 
@@ -47,6 +49,7 @@
             <td class="py-3 px-6">{{ user.user_login }}</td>
             <td class="py-3 px-6">{{ user.user_mail }}</td>
             <td class="py-3 px-6">{{ user.user_date_login or 'Jamais connecté' }}</td>
+            {% if current_user.role == 'admin' %}
             <td class="py-3 px-6 text-center space-x-2">
               <a href="{{ url_for('edit_user', user_id=user.user_id) }}">
                 <button class=" px-3 py-1 ">
@@ -62,10 +65,11 @@
                 </button>
               </form>
             </td>
+            {% endif %}
           </tr>
           {% else %}
           <tr>
-            <td colspan="4" class="text-center py-6 text-gray-500">Aucun utilisateur trouvé</td>
+            <td colspan="5" class="text-center py-6 text-gray-500">Aucun utilisateur trouvé</td>
           </tr>
           {% endfor %}
         </tbody>
